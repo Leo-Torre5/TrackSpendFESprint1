@@ -135,7 +135,7 @@
   
         try {
           const response = await axios.post(
-            'http://localhost:8000/register/',
+            'https://leotorres.pythonanywhere.com/register/',
             this.credentials
           );
   
