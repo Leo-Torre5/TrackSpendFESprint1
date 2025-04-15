@@ -20,16 +20,16 @@
   
           <!-- Mobile View -->
           <div class="mobile-view d-md-none">
-            <div class="expense-card" v-for="expense in expenses" :key="expense.id">
+            <div class="expense-card" v-for="expense in expenses || []" :key="expense.id">
               <div class="card-header">
                 <h3>{{ expense.description }}</h3>
                 <p>{{ formatCurrency(expense.amount) }}</p>
               </div>
               <div class="card-body">
                 <p><strong>Date:</strong> {{ formatDate(expense.date) }}</p>
-                <p><strong>Category:</strong> {{ expense.category }}</p>
+                <p><strong>Category:</strong> {{ expense.category.name }}</p>
                 <div class="actions">
-                  <button @click="editExpense(expense)" class="icon-button">
+                  <button @click="editExpense(expense.id)" class="icon-button">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button @click="deleteExpense(expense.id)" class="icon-button">
@@ -41,7 +41,7 @@
           </div>
   
           <!-- Desktop View -->
-          <table class="expense-table" v-if="!loading && expenses.length">
+          <table class="expense-table" v-if="!loading && expenses && expenses.length > 0">
             <thead>
               <tr>
                 <th>Date</th>
@@ -56,7 +56,7 @@
                 <td>{{ formatDate(expense.date) }}</td>
                 <td>{{ expense.description }}</td>
                 <td>{{ formatCurrency(expense.amount) }}</td>
-                <td>{{ expense.category }}</td>
+                <td>{{ expense.category.name }}</td>
                 <td class="actions">
                   <button @click="editExpense(expense.id)" class="icon-button">
                     <i class="fas fa-edit"></i>
@@ -69,7 +69,7 @@
             </tbody>
           </table>
   
-          <div v-if="!loading && !expenses.length" class="no-expenses">
+          <div v-if="!loading && (!expenses || expenses.length === 0)" class="no-expenses">
             <p>No expenses found. <router-link to="/expenses/create">Add your first expense</router-link></p>
           </div>
   
@@ -116,11 +116,19 @@
             page_size: this.itemsPerPage
           });
           
-          this.expenses = response.data.results;
-          this.totalPages = Math.ceil(response.data.count / this.itemsPerPage);
+          if (response && response.data) {
+            this.expenses = response.data || [];
+            this.totalPages = Math.ceil((response.data.count || 0) / this.itemsPerPage);
+          } else {
+            this.expenses = [];
+            this.totalPages = 1;
+            this.error = 'Invalid response format from server.';
+          }
         } catch (error) {
           this.error = 'Failed to load expenses. Please try again later.';
           console.error('Error fetching expenses:', error);
+          this.expenses = [];
+          this.totalPages = 1;
         } finally {
           this.loading = false;
         }
