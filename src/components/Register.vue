@@ -100,6 +100,8 @@
   </template>
   
   <script>
+  const API_URL = process.env.VUE_APP_API_URL;
+
   import axios from 'axios';
   import router from '../router';
   
@@ -135,7 +137,7 @@
   
         try {
           const response = await axios.post(
-            'https://leotorres.pythonanywhere.com/register/',
+            `${API_URL}/register/`,
             this.credentials
           );
   

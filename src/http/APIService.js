@@ -1,5 +1,6 @@
 import axios from 'axios';
-const API_URL = 'https://leotorres.pythonanywhere.com/'; // 'http://localhost:8000' http://127.0.0.1:8000 or  'https://leotorres.pythonanywhere.com/'*/
+// const API_URL = 'https://leotorres.pythonanywhere.com/'; 
+const API_URL = process.env.VUE_APP_API_URL;
 
 export class APIService {
   constructor() {

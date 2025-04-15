@@ -69,6 +69,8 @@
 </template>
 
 <script>
+const API_URL = process.env.VUE_APP_API_URL;
+
 import axios from 'axios';
 import router from '../router';
 import { mapMutations } from 'vuex';
@@ -95,7 +97,7 @@ export default {
       
       try {
         const response = await axios.post(
-          'https://leotorres.pythonanywhere.com/api/token/',
+          `${API_URL}/api/token/`,
           this.credentials
         );
 
