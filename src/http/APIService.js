@@ -14,68 +14,68 @@ export class APIService {
 
   // ==================== Authentication ====================
   authenticateLogin(credentials) {
-    return this.apiClient.post('api/token/', credentials);
+    return this.apiClient.post('/api/token/', credentials);
   }
 
   refreshToken() {
-    return this.apiClient.post('api/token/refresh/', {
+    return this.apiClient.post('/api/token/refresh/', {
       refresh: localStorage.getItem('refresh_token')
     });
   }
 
   registerUser(userData) {
-    return this.apiClient.post('register/', userData);
+    return this.apiClient.post('/register/', userData);
   }
 
   // ==================== Expenses ====================
   getExpense(expenseId) {
-    return this.apiClient.get(`api/expenses/${expenseId}/`, this.getAuthHeader());
+    return this.apiClient.get(`/api/expenses/${expenseId}/`, this.getAuthHeader());
   }
 
   getExpenseList() {
-    return this.apiClient.get('api/expenses/', this.getAuthHeader());
+    return this.apiClient.get('/api/expenses/', this.getAuthHeader());
   }
 
   createExpense(expenseData) {
-    return this.apiClient.post('api/expenses/', expenseData, this.getAuthHeader());
+    return this.apiClient.post('/api/expenses/', expenseData, this.getAuthHeader());
   }
 
   updateExpense(expenseId, expenseData) {
-    return this.apiClient.put(`api/expenses/${expenseId}/`, expenseData, this.getAuthHeader());
+    return this.apiClient.put(`/api/expenses/${expenseId}/`, expenseData, this.getAuthHeader());
   }
 
   deleteExpense(expenseId) {
-    return this.apiClient.delete(`api/expenses/${expenseId}/`, this.getAuthHeader());
+    return this.apiClient.delete(`/api/expenses/${expenseId}/`, this.getAuthHeader());
   }
 
   // ==================== Budgets ====================
   getBudget(budgetId) {
-    return this.apiClient.get(`api/budgets/${budgetId}/`, this.getAuthHeader());
+    return this.apiClient.get(`/api/budgets/${budgetId}/`, this.getAuthHeader());
   }
 
   getBudgetList() {
-    return this.apiClient.get('api/budgets/', this.getAuthHeader());
+    return this.apiClient.get('/api/budgets/', this.getAuthHeader());
   }
 
   createBudget(budgetData) {
-    return this.apiClient.post('api/budgets/', budgetData, this.getAuthHeader());
+    return this.apiClient.post('/api/budgets/', budgetData, this.getAuthHeader());
   }
 
   updateBudget(budgetId, budgetData) {
-    return this.apiClient.put(`api/budgets/${budgetId}/`, budgetData, this.getAuthHeader());
+    return this.apiClient.put(`/api/budgets/${budgetId}/`, budgetData, this.getAuthHeader());
   }
 
   deleteBudget(budgetId) {
-    return this.apiClient.delete(`api/budgets/${budgetId}/`, this.getAuthHeader());
+    return this.apiClient.delete(`/api/budgets/${budgetId}/`, this.getAuthHeader());
   }
 
   // ==================== Users ====================
   getUserProfile() {
-    return this.apiClient.get('api/getUser/', this.getAuthHeader());
+    return this.apiClient.get('/api/getUser/', this.getAuthHeader());
   }
 
   updateUserProfile(userData) {
-    return this.apiClient.put('api/getUser/', userData, this.getAuthHeader());
+    return this.apiClient.put('/api/getUser/', userData, this.getAuthHeader());
   }
 
   // ==================== Helper Methods ====================
