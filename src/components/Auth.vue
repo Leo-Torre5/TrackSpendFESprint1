@@ -14,11 +14,8 @@
         <p class="subtitle">The Smart, Personalized Way to Track & Budget.</p>
      
         
-        <div v-if="showMsg === 'loginError'" class="auth-alert error">
-          Invalid username or password. Please try again.
-        </div>
-        <div v-else-if="showMsg === 'axiosError'" class="auth-alert error">
-          Server connection error. Please try again later.
+        <div v-if="showMsg" class="auth-alert error">
+          {{ showMsg }}
         </div>
 
         <form @submit.prevent="login" class="auth-form">
@@ -120,18 +117,22 @@ export default {
 
     handleError(error) {
       if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            this.showMsg = 'Invalid username or password';
-            break;
-          case 400:
-            this.showMsg = 'Missing required fields';
-            break;
-          default:
-            this.showMsg = 'Server error. Please try again later.';
+        if (error.response.data && error.response.data.detail) {
+          this.showMsg = error.response.data.detail;
+        } else {
+          switch (error.response.status) {
+            case 401:
+              this.showMsg = 'Invalid credentials';
+              break;
+            case 400:
+              this.showMsg = 'Missing required fields';
+              break;
+            default:
+              this.showMsg = 'Server error. Please try again later.';
+          }
         }
       } else {
-        this.showMsg = 'Network error. Check your connection.';
+        this.showMsg = 'Network error. Please check your connection.';
       }
     }
   }
