@@ -225,6 +225,7 @@ html, body, #app {
   background-color: #f8f9fa;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #2c463f
 }
 
 .btn-login {
@@ -237,6 +238,7 @@ html, body, #app {
   color: #2c463f; 
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #2c463f
 }
 
 .btn-logout {
@@ -249,6 +251,7 @@ html, body, #app {
   background-color: white;
   border-color: black;
   transform: translateY(-1px);
+  color: #2c463f
 }
 
 .footer-content {
