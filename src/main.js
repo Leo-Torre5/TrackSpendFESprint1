@@ -10,6 +10,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
+
 // FontAwesome setup
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { faTrash, faPencil, faPlus } from "@fortawesome/free-solid-svg-icons"

@@ -120,22 +120,53 @@
     },
     methods: {
       async fetchBudgets() {
-        try {
-          this.loading = true;
-          const response = await apiService.getBudgetList({
-            page: this.currentPage,
-            page_size: this.itemsPerPage
-          });
-          
-          this.budgets = response.data.results;
-          this.totalPages = Math.ceil(response.data.count / this.itemsPerPage);
-        } catch (error) {
-          this.error = 'Failed to load budgets. Please try again later.';
-          console.error('Error fetching budgets:', error);
-        } finally {
-          this.loading = false;
-        }
-      },
+  try {
+    this.loading = true;
+    const response = await apiService.getBudgetList({
+      page: this.currentPage,
+      page_size: this.itemsPerPage
+    });
+
+    // Handle different response structures
+    const responseData = response.data;
+    let budgetsArray = [];
+    let totalCount = 0;
+
+    if (Array.isArray(responseData)) {
+      // Response is a direct array
+      budgetsArray = responseData;
+      totalCount = responseData.length;
+    } else if (responseData.results) {
+      // Standard DRF paginated response
+      budgetsArray = responseData.results;
+      totalCount = responseData.count;
+    } else if (responseData.items) {
+      // Alternative pagination format
+      budgetsArray = responseData.items;
+      totalCount = responseData.total;
+    } else {
+      // Fallback to empty array
+      budgetsArray = [];
+      totalCount = 0;
+    }
+
+    this.budgets = budgetsArray.map(budget => ({
+      ...budget,
+      category: budget.category?.name || 
+               (typeof budget.category === 'object' ? budget.category.name : `Category ${budget.category}`),
+      amount: parseFloat(budget.amount) || 0,
+      current_spending: budget.current_spending || 0
+    }));
+
+    this.totalPages = Math.ceil(totalCount / this.itemsPerPage);
+  } catch (error) {
+    console.error('Budget fetch error:', error);
+    this.error = error.response?.data?.message || 
+                'Failed to load budgets. Please try again.';
+  } finally {
+    this.loading = false;
+  }
+},
   
       formatDate(dateString) {
         const options = { year: 'numeric', month: 'short', day: 'numeric' };

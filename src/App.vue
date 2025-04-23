@@ -1,3 +1,4 @@
+<!-- App.vue-->
 <template>
   <div id="app" class="app-container d-flex flex-column min-vh-100">
     <!-- Navbar - simplified structure -->
@@ -42,14 +43,19 @@
           
           <li class="nav-item" v-if="authenticated">
             <router-link to="/expenses" class="nav-link" :class="{ active: $route.path === '/expenses' }">
-              <i class="bi bi-cash-stack me-1"></i> Expenses
+              <i class="bi bi-cash-stack me-1"></i> My Expenses
             </router-link>
           </li>
           <li class="nav-item" v-if="authenticated">
             <router-link to="/budgets" class="nav-link" :class="{ active: $route.path.startsWith('/budgets') }">
-              <i class="bi bi-wallet2 me-1"></i> Budgets
+              <i class="bi bi-wallet2 me-1"></i> My Budgets
             </router-link>
-          </li>
+          </li> 
+          <li class="nav-item" v-if="authenticated & isAdmin">
+            <router-link :to="{ name: 'AdminUsers' }" class="nav-link">
+                <i class="bi bi-shield-lock me-1"></i> Admin Dashboard
+              </router-link>
+            </li>
         </ul>
         
         <div class="auth-buttons">
@@ -70,7 +76,9 @@
     </nav>
     
     <!-- Main Content - simplified -->
-    <router-view class="main-content" />
+    <div class="main-content">
+      <router-view />
+    </div>
     
     <!-- Footer -->
     <footer class="global-footer">
@@ -96,10 +104,15 @@ import { useRouter } from 'vue-router';
 export default {
   name: 'App',
   setup() {
-    const store = useStore();
-    const router = useRouter();
+  const store = useStore()
+  const router = useRouter()
 
-    const authenticated = computed(() => store.state.authenticated);
+  const authenticated = computed(() => store.state.authenticated)
+  const isAdmin = computed(() => {
+    // Check Vuex first, then localStorage fallback
+    const user = store.state.user || JSON.parse(localStorage.getItem('user'))
+    return user && (user.is_staff || user.is_superuser || user.user_type === 2)
+  })
 
     const logout = () => {
       localStorage.clear();
@@ -109,6 +122,7 @@ export default {
 
     return {
       authenticated,
+      isAdmin,
       logout
     };
   }
