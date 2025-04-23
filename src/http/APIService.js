@@ -1,6 +1,8 @@
+// http/APIService.js
 import axios from 'axios';
-// const API_URL = 'https://leotorres.pythonanywhere.com/'; 
-const API_URL = process.env.VUE_APP_API_URL;
+
+// Verify environment variable is set
+const API_URL = 'http://localhost:8000/';
 
 export class APIService {
   constructor() {
@@ -87,6 +89,78 @@ export class APIService {
     };
   }
 
+  // ==================== Admin Endpoints ====================
+// Users
+getAdminUserList() {
+  return this.apiClient.get('/api/admin/users/', this.getAuthHeader());
+}
+
+getAdminUser(userId) {
+  return this.apiClient.get(`/api/admin/users/${userId}/`, this.getAuthHeader());
+}
+
+createAdminUser(userData) {
+  return this.apiClient.post('/api/admin/users/', userData, this.getAuthHeader());
+}
+
+updateAdminUser(userId, userData) {
+  const config = {
+    ...this.getAuthHeader(),
+    headers: {
+      ...this.getAuthHeader().headers,
+      'Content-Type': 'application/json'
+    }
+  };
+  
+  return this.apiClient.put(`/api/admin/users/${userId}/`, userData, config);
+}
+
+deleteAdminUser(userId) {
+  return this.apiClient.delete(`/api/admin/users/${userId}/`, this.getAuthHeader());
+}
+
+// Categories
+getAdminCategoryList() {
+  return this.apiClient.get('/api/admin/categories/', this.getAuthHeader());
+}
+
+getAdminCategory(id) {
+  return this.apiClient.get(`/api/admin/categories/${id}/`, this.getAuthHeader());
+}
+
+createAdminCategory(data) {
+  return this.apiClient.post('/api/admin/categories/', data, this.getAuthHeader());
+}
+
+updateAdminCategory(id, data) {
+  return this.apiClient.put(`/api/admin/categories/${id}/`, data, this.getAuthHeader());
+}
+
+deleteAdminCategory(id) {
+  return this.apiClient.delete(`/api/admin/categories/${id}/`, this.getAuthHeader());
+}
+
+// Budgets
+getAdminBudgetList() {
+  return this.apiClient.get('/api/admin/budgets/', this.getAuthHeader());
+}
+
+getAdminBudget(budgetId) {
+  return this.apiClient.get(`/api/admin/budgets/${budgetId}/`, this.getAuthHeader());
+}
+
+createAdminBudget(budgetData) {
+  return this.apiClient.post('/api/admin/budgets/', budgetData, this.getAuthHeader());
+}
+
+updateAdminBudget(budgetId, budgetData) {
+  return this.apiClient.put(`/api/admin/budgets/${budgetId}/`, budgetData, this.getAuthHeader());
+}
+
+deleteAdminBudget(budgetId) {
+  return this.apiClient.delete(`/api/admin/budgets/${budgetId}/`, this.getAuthHeader());
+}
+
   // Add request interceptor for token refresh
   setupInterceptors(store) {
     this.apiClient.interceptors.request.use(
@@ -124,3 +198,5 @@ export class APIService {
     );
   }
 }
+// Export both the class and a pre-configured instance
+export default new APIService();

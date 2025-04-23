@@ -69,11 +69,11 @@
 </template>
 
 <script>
-const API_URL = process.env.VUE_APP_API_URL;
-
+const API_URL = 'http://localhost:8000'
 import axios from 'axios';
 import router from '../router';
 import { mapMutations } from 'vuex';
+
 
 export default {
   name: 'AuthPage',
@@ -89,29 +89,32 @@ export default {
     };
   },
   methods: {
-    ...mapMutations(['SET_AUTHENTICATED']),
+    ...mapMutations(['SET_AUTHENTICATED', 'SET_USER']), // Add SET_USER mutation
     
     async login() {
       this.loading = true;
       this.showMsg = '';
       
       try {
-        const response = await axios.post(
-          `${API_URL}/api/token/`,
-          this.credentials
-        );
+      const tokenResponse = await axios.post(`${API_URL}/api/token/`, this.credentials)
+      localStorage.setItem('access_token', tokenResponse.data.access)
+      localStorage.setItem('refresh_token', tokenResponse.data.refresh)
 
-        // Store tokens
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
-        
-        // Update Vuex state
-        this.SET_AUTHENTICATED(true);
+      const userResponse = await axios.get(`${API_URL}/api/getUser/`, {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.data.access}`
+        }
+      })
 
-        // Redirect to home - IMPORTANT: Remove any reloads
-        await router.push({ name: 'Home' }); 
+      // Store user data
+      localStorage.setItem('user', JSON.stringify(userResponse.data))
+      
+      // Commit both mutations
+      this.SET_AUTHENTICATED(true)
+      this.SET_USER(userResponse.data) // This now works
 
-      } catch (error) {
+      await router.push({ name: 'Home' })
+    } catch (error) {
         this.handleError(error);
       } finally {
         this.loading = false;
@@ -122,7 +125,7 @@ export default {
       if (error.response) {
         switch (error.response.status) {
           case 401:
-            this.showMsg = 'Invalid username or password';
+            this.showMsg = 'loginError';
             break;
           case 400:
             this.showMsg = 'Missing required fields';
@@ -131,7 +134,7 @@ export default {
             this.showMsg = 'Server error. Please try again later.';
         }
       } else {
-        this.showMsg = 'Network error. Check your connection.';
+        this.showMsg = 'axiosError';
       }
     }
   }

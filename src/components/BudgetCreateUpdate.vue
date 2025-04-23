@@ -1,201 +1,241 @@
 <template>
-    <div class="budget-form">
-  
-      <main class="main-content">
-        <div class="auth-card">
-          <h2 class="auth-title">{{ pageTitle }}</h2>
-          
-          <div v-if="showMsg === 'error'" class="auth-alert error">
-            {{ errorMessage }}
+  <div class="budget-form">
+    <main class="main-content">
+      <div class="auth-card">
+        <h2 class="auth-title">{{ pageTitle }}</h2>
+        
+        <div v-if="showMsg === 'error'" class="auth-alert error">
+          {{ errorMessage }}
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="budget-form-content">
+          <div class="form-group">
+            <label>Category</label>
+            <select 
+              v-model="budget.category_id" 
+              class="form-input" 
+              required
+              :disabled="loading"
+            >
+              <option value="">Select Category</option>
+              <option 
+                v-for="category in categories" 
+                :key="category.id" 
+                :value="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </select>
           </div>
-  
-          <form @submit.prevent="handleSubmit" class="budget-form-content">
+
+          <div class="form-row">
             <div class="form-group">
-              <label>Category</label>
-              <select v-model="budget.category" class="form-input" required>
-                <option value="">Select Category</option>
-                <option value="Food">Food</option>
-                <option value="Transportation">Transportation</option>
-                <option value="Housing">Housing</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Other">Other</option>
+              <label>Budget Amount</label>
+              <input
+                v-model.number="budget.amount"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                class="form-input"
+                placeholder="0.00"
+                :disabled="loading"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Period</label>
+              <select
+                v-model="budget.period"
+                class="form-input"
+                required
+                :disabled="loading"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-Weekly</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="six_month">Six Month</option>
+                <option value="yearly">Yearly</option>
               </select>
             </div>
-  
-            <div class="form-row">
-              <div class="form-group">
-                <label>Budget Amount</label>
-                <input
-                  v-model.number="budget.amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  class="form-input"
-                  placeholder="0.00"
-                />
-              </div>
-  
-              <div class="form-group">
-                <label>Current Spending</label>
-                <input
-                  v-model.number="budget.current_spending"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  class="form-input"
-                  placeholder="0.00"
-                  :disabled="isUpdate"
-                />
-              </div>
-            </div>
-  
-            <div class="form-row">
-              <div class="form-group">
-                <label>Start Date</label>
-                <input
-                  v-model="budget.start_date"
-                  type="date"
-                  required
-                  class="form-input"
-                  :max="budget.end_date"
-                />
-              </div>
-  
-              <div class="form-group">
-                <label>End Date</label>
-                <input
-                  v-model="budget.end_date"
-                  type="date"
-                  required
-                  class="form-input"
-                  :min="budget.start_date"
-                />
-              </div>
-            </div>
-            
-  
-            <div class="action-buttons">
-              <button type="submit" class="auth-button" :disabled="loading">
-                {{ loading ? 'Saving...' : 'Save Budget' }}
-              </button>
-              <button type="button" class="auth-button secondary" @click="cancel">
-                Cancel
-              </button>
-              <div class="nav-links">
-            <router-link to="/budgets" class="sign-in-button">
-              Back to Budgets
-            </router-link>
           </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input
+                v-model="budget.start_date"
+                type="date"
+                required
+                class="form-input"
+                :max="budget.end_date"
+                :disabled="loading"
+              />
             </div>
-          </form>
-        </div>
-      </main>
-    </div>
-  </template>
-  
-  <script>
-  import { APIService } from '@/http/APIService';
-  const apiService = new APIService();
-  
-  export default {
-    name: 'BudgetCreateUpdate',
-    data() {
-      return {
-        budget: {
-          category: '',
-          amount: 0,
-          current_spending: 0,
-          start_date: new Date().toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0]
-        },
-        pageTitle: 'New Budget',
-        showMsg: '',
-        errorMessage: '',
-        loading: false,
-        isUpdate: false
-      };
-    },
-    beforeCreate() {
-      const isAuthenticated = localStorage.getItem('access_token');
-      if (!isAuthenticated) {
-        this.$router.push('/auth');
-      }
-    },
-    async mounted() {
-      if (this.$route.params.id) {
-        this.isUpdate = true;
-        this.pageTitle = 'Edit Budget';
-        await this.fetchBudget();
-      }
-    },
-    methods: {
-      async fetchBudget() {
-        try {
-          const response = await apiService.getBudget(this.$route.params.id);
-          this.budget = {
-            ...response.data,
-            start_date: response.data.start_date.split('T')[0],
-            end_date: response.data.end_date.split('T')[0]
-          };
-        } catch (error) {
-          this.handleError(error);
-        }
-      },
-      async handleSubmit() {
-        this.loading = true;
-        this.showMsg = '';
-        
-        try {
-          const budgetData = {
-            ...this.budget,
-            amount: parseFloat(this.budget.amount),
-            current_spending: parseFloat(this.budget.current_spending)
-          };
-  
-          if (this.isUpdate) {
-            await apiService.updateBudget(this.$route.params.id, budgetData);
-          } else {
-            await apiService.createBudget(budgetData);
-          }
+
+            <div class="form-group">
+              <label>End Date</label>
+              <input
+                v-model="budget.end_date"
+                type="date"
+                class="form-input"
+                :min="budget.start_date"
+                :disabled="loading"
+              />
+            </div>
+          </div>
           
-          this.$router.push('/budgets');
-        } catch (error) {
-          this.handleError(error);
-        } finally {
-          this.loading = false;
-        }
+          <div class="action-buttons">
+            <button 
+              type="submit" 
+              class="auth-button" 
+              :disabled="loading"
+            >
+              {{ loading ? 'Saving...' : 'Save Budget' }}
+            </button>
+            <button 
+              type="button" 
+              class="auth-button secondary" 
+              @click="cancel"
+              :disabled="loading"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script>
+import { APIService } from '@/http/APIService';
+const apiService = new APIService();
+
+export default {
+  name: 'BudgetCreateUpdate',
+  data() {
+    return {
+      budget: {
+        category_id: null,
+        amount: 0,
+        period: 'monthly',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: this.getDefaultEndDate()
       },
-      handleError(error) {
-        this.showMsg = 'error';
-        if (error.response) {
-          switch (error.response.status) {
-            case 400:
-              this.errorMessage = this.parseValidationErrors(error.response.data);
-              break;
-            case 401:
-              localStorage.removeItem('access_token');
-              this.$router.push('/auth');
-              break;
-            default:
-              this.errorMessage = 'Error saving budget. Please try again.';
+      categories: [],
+      pageTitle: 'Create Budget',
+      showMsg: '',
+      errorMessage: '',
+      loading: false,
+      isUpdate: false
+    };
+  },
+  async created() {
+    await this.fetchCategories();
+    if (this.$route.params.id) {
+      this.isUpdate = true;
+      this.pageTitle = 'Edit Budget';
+      await this.fetchBudget();
+    }
+  },
+  methods: {
+    getDefaultEndDate() {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 1);
+      return date.toISOString().split('T')[0];
+    },
+    async fetchCategories() {
+      try {
+        const response = await apiService.getAdminCategoryList();
+        this.categories = response.data;
+      } catch (error) {
+        this.handleError(error);
+      }
+    },
+    async fetchBudget() {
+      try {
+        this.loading = true;
+        const response = await apiService.getAdminBudget(this.$route.params.id);
+        const data = response.data;
+        
+        this.budget = {
+          category_id: data.category?.id || data.category_id,
+          amount: parseFloat(data.amount),
+          period: data.period,
+          start_date: data.start_date.split('T')[0],
+          end_date: data.end_date ? data.end_date.split('T')[0] : this.getDefaultEndDate()
+        };
+      } catch (error) {
+        this.handleError(error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async handleSubmit() {
+  this.loading = true;
+  this.showMsg = '';
+  
+  try {
+    // Get the current user ID from your auth system
+    const userId = this.$store.state.user?.id || 
+                 JSON.parse(localStorage.getItem('user'))?.id;
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    const budgetData = {
+      user_id: userId,  // Add the user ID
+      category_id: this.budget.category_id,
+      amount: parseFloat(this.budget.amount),
+      period: this.budget.period,
+      start_date: this.budget.start_date,
+      end_date: this.budget.end_date || null
+    };
+
+    if (this.isUpdate) {
+      await apiService.updateAdminBudget(this.$route.params.id, budgetData);
+    } else {
+      await apiService.createAdminBudget(budgetData);
+    }
+    
+    this.$router.push('/budgets');
+  } catch (error) {
+    this.handleError(error);
+  } finally {
+    this.loading = false;
+  }
+},
+    handleError(error) {
+      this.showMsg = 'error';
+      if (error.response) {
+        if (error.response.data) {
+          if (typeof error.response.data === 'string') {
+            this.errorMessage = error.response.data;
+          } else if (error.response.data.detail) {
+            this.errorMessage = error.response.data.detail;
+          } else {
+            this.errorMessage = Object.entries(error.response.data)
+              .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+              .join('\n');
           }
         } else {
-          this.errorMessage = 'Network error. Please check your connection.';
+          this.errorMessage = `Error: ${error.response.status}`;
         }
-      },
-      parseValidationErrors(errors) {
-        return Object.values(errors).join(' ');
-      },
-      cancel() {
-        this.$router.push('/budgets');
+      } else {
+        this.errorMessage = 'Network error. Please check your connection.';
       }
+    },
+    cancel() {
+      this.$router.push('/budgets');
     }
-  };
-  </script>
+  }
+};
+</script>
   
-  <style scoped>
+<style scoped>
   .budget-form-content {
     max-width: 800px;
     margin: 0 auto;
