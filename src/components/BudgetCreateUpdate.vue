@@ -12,14 +12,13 @@
           <form @submit.prevent="handleSubmit" class="budget-form-content">
             <div class="form-group">
               <label>Category</label>
-              <select v-model="budget.category" class="form-input" required>
+              <select v-model="budget.category_id" class="form-input" required>
                 <option value="">Select Category</option>
-                <option value="Food">Food</option>
-                <option value="Transportation">Transportation</option>
-                <option value="Housing">Housing</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Other">Other</option>
+                <option v-for="category in categories" 
+                        :key="category.id" 
+                        :value="category.id">
+                    {{ category.name }}
+                </option>
               </select>
             </div>
   
@@ -103,8 +102,9 @@
     name: 'BudgetCreateUpdate',
     data() {
       return {
+        categories: [],
         budget: {
-          category: '',
+          category_id: '',
           amount: 0,
           current_spending: 0,
           start_date: new Date().toISOString().split('T')[0],
@@ -124,6 +124,7 @@
       }
     },
     async mounted() {
+      await this.fetchCategories();
       if (this.$route.params.id) {
         this.isUpdate = true;
         this.pageTitle = 'Edit Budget';
@@ -131,6 +132,14 @@
       }
     },
     methods: {
+      async fetchCategories() {
+        try {
+          const response = await apiService.getCategoriesList();
+          this.categories = response.data;
+        } catch (error) {
+          this.handleError(error);
+        }
+      },
       async fetchBudget() {
         try {
           const response = await apiService.getBudget(this.$route.params.id);

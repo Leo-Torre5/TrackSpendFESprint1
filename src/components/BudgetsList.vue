@@ -122,12 +122,18 @@
       async fetchBudgets() {
         try {
           this.loading = true;
+          this.error = '';
           const response = await apiService.getBudgetList({
             page: this.currentPage,
             page_size: this.itemsPerPage
           });
           
-          this.budgets = response.data.results;
+          if (!response.data || response.data.length === 0) {
+            this.budgets = [];
+
+          } else {
+            this.budgets = response.data;
+          }
           this.totalPages = Math.ceil(response.data.count / this.itemsPerPage);
         } catch (error) {
           this.error = 'Failed to load budgets. Please try again later.';

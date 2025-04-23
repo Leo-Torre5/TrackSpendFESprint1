@@ -27,6 +27,15 @@ export class APIService {
     return this.apiClient.post('/register/', userData);
   }
 
+  // ==================== Categories ====================
+  getExpense(categoryId) {
+    return this.apiClient.get(`/api/categories/${categoryId}/`, this.getAuthHeader());
+  }
+
+  getCategoriesList() {
+    return this.apiClient.get('/api/categories/', this.getAuthHeader());
+  }
+
   // ==================== Expenses ====================
   getExpense(expenseId) {
     return this.apiClient.get(`/api/expenses/${expenseId}/`, this.getAuthHeader());
