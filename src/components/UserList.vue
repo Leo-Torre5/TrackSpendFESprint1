@@ -101,6 +101,7 @@
   </template>
   
   <script>
+  const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000';
   import axios from 'axios';
   import router from '../router';
   
@@ -129,7 +130,7 @@
     methods: {
       async getUsers() {
         try {
-          const response = await axios.get('http://localhost:8000/api/users/', {
+          const response = await axios.get(API_URL, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('access_token')}`
             }
@@ -153,7 +154,7 @@
       async deleteUser(user) {
         if (confirm(`Are you sure you want to delete ${user.username}?`)) {
           try {
-            await axios.delete(`http://localhost:8000/api/users/${user.id}/`, {
+            await axios.delete(`${API_URL}/api/users/${user.id}/`, {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('access_token')}`
               }
