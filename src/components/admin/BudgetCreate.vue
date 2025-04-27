@@ -12,7 +12,7 @@
         <!-- User Selection -->
         <div class="col-md-6">
           <label class="form-label">User</label>
-          <select class="form-select" v-model="budget.user" required>
+          <select class="form-select" v-model="budget.user_id" required>
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.username }}
             </option>
@@ -22,7 +22,7 @@
         <!-- Category Selection -->
         <div class="col-md-6">
           <label class="form-label">Category</label>
-          <select class="form-select" v-model="budget.category" required>
+          <select class="form-select" v-model="budget.category_id" required>
             <option v-for="category in categories" :key="category.id" :value="category.id">
               {{ category.name }}
             </option>
@@ -134,6 +134,7 @@ export default {
         // Set default selections if needed
         if (this.users.length > 0 && !this.budget.user_id) {
           this.budget.user_id = this.users[0].id;
+          console.log("user_id", this.budget.user_id);
         }
         if (this.categories.length > 0 && !this.budget.category_id) {
           this.budget.category_id = this.categories[0].id;
