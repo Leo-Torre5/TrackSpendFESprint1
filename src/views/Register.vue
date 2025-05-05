@@ -92,7 +92,7 @@
           </form>
   
           <div class="auth-footer">
-            <p>Already have an account? <router-link to="/auth">Login here</router-link></p>
+            <p>Already have an account? <router-link to="/login">Login here</router-link></p>
           </div>
         </div>
       </main>
@@ -142,7 +142,7 @@
           );
   
           if (response.status === 201) {
-            router.push('/auth');
+            router.push('/login');
           }
         } catch (error) {
           this.showMsg = 'error';

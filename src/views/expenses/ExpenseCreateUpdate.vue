@@ -127,7 +127,7 @@ export default {
     beforeCreate() {
         const isAuthenticated = localStorage.getItem("access_token");
         if (!isAuthenticated) {
-            this.$router.push("/auth");
+            this.$router.push("/login");
         }
     },
     async mounted() {
@@ -211,7 +211,7 @@ export default {
                         break;
                     case 401:
                         localStorage.removeItem("access_token");
-                        this.$router.push("/auth");
+                        this.$router.push("/login");
                         break;
                     default:
                         this.errorMessage =

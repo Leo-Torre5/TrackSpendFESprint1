@@ -1,4 +1,4 @@
-<!-- src/components/Auth.vue -->
+<!-- src/components/login.vue -->
 <template>
   <div class="auth-page">
        <main class="auth-container">

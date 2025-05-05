@@ -103,7 +103,7 @@
   <script>
   const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000';
   import axios from 'axios';
-  import router from '../router';
+  import router from '../../router';
   
   export default {
     name: 'UserList',
@@ -120,7 +120,7 @@
       const isAdmin = JSON.parse(localStorage.getItem('is_staff') || false)
       
       if (!isAuthenticated || !isAdmin) {
-        router.push('/auth');
+        router.push('/login');
       }
     },
     async mounted() {
@@ -171,7 +171,7 @@
           switch (error.response.status) {
             case 401:
               localStorage.clear();
-              router.push('/auth');
+              router.push('/login');
               break;
             case 403:
               alert('You do not have permission for this action');
