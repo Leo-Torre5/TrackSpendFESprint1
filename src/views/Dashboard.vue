@@ -48,10 +48,10 @@ export default {
             } else if (this.selectedPeriod === 'year') {
                 cutoffDate.setFullYear(now.getFullYear() - 1);
             } else {
-                // Trier toutes les dépenses par date décroissante
+                // Sort all expenses by descending date
                 return [...this.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
             }
-            // Filtrer puis trier par date décroissante
+            // Filter then sort by descending date
             return this.expenses
                 .filter(expense => new Date(expense.date) >= cutoffDate)
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
