@@ -38,6 +38,19 @@ const routes = [
         component: () => import("@/views/Dashboard.vue"),
         meta: { requiresAuth: true },
     },
+    // Profile
+    {
+        path: "/profile",
+        name: "UserProfile",
+        component: () => import("@/views/profile/UserProfile.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/profile/update",
+        name: "UpdateProfile",
+        component: () => import("@/views/profile/UpdateProfile.vue"),
+        meta: { requiresAuth: true },
+    },
     // Reports
     {
         path: "/reports",
@@ -193,7 +206,7 @@ const routes = [
             },
         ],
     },
-    // 404 Not Found - Doit être placé à la fin du tableau des routes
+    // 404 Not Found
     {
         path: "/:pathMatch(.*)*",
         name: "NotFound",

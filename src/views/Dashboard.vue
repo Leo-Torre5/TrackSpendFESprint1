@@ -1,16 +1,30 @@
 <script>
 import { onMounted, computed } from "vue";
 import { APIService } from "@/http/APIService";
+import UserProfile from "@/views/profile/UserProfile.vue";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar } from 'vue-chartjs';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+
 const apiService = new APIService();
 
 export default {
     name: "Dashboard",
+    components: {
+        UserProfile,
+        Pie,
+        Bar
+    },
     data() {
         return {
             loading: true,
             error: "",
             expenses: [],
             pendingFriendRequests: [], // Placeholder for now
+            selectedPeriod: 'month',
+            isLoading: true,
+            categories: []
         };
     },
     setup() {
@@ -23,26 +37,162 @@ export default {
         totalExpenses() {
             return this.expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
         },
-        recentExpenses() {
-            // Return the 5 most recent expenses
-            return [...this.expenses].sort((a, b) => 
-                new Date(b.date) - new Date(a.date)
-            ).slice(0, 5);
+        // Reports logic below
+        filteredExpenses() {
+            const now = new Date();
+            let cutoffDate = new Date();
+            if (this.selectedPeriod === 'week') {
+                cutoffDate.setDate(now.getDate() - 7);
+            } else if (this.selectedPeriod === 'month') {
+                cutoffDate.setMonth(now.getMonth() - 1);
+            } else if (this.selectedPeriod === 'year') {
+                cutoffDate.setFullYear(now.getFullYear() - 1);
+            } else {
+                // Trier toutes les dépenses par date décroissante
+                return [...this.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+            // Filtrer puis trier par date décroissante
+            return this.expenses
+                .filter(expense => new Date(expense.date) >= cutoffDate)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        },
+        totalAmount() {
+            return this.filteredExpenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
+        },
+        expensesByCategory() {
+            const result = {};
+            this.categories.forEach(category => {
+                result[category] = this.filteredExpenses
+                    .filter(expense => expense.category.name === category)
+                    .reduce((total, expense) => total + parseFloat(expense.amount), 0);
+            });
+            return result;
+        },
+        pieChartData() {
+            const filteredExpensesByCategory = {};
+            this.categories.forEach(category => {
+                filteredExpensesByCategory[category] = this.filteredExpenses
+                    .filter(expense => expense.category.name === category)
+                    .reduce((total, expense) => total + parseFloat(expense.amount), 0);
+            });
+            return {
+                labels: Object.keys(filteredExpensesByCategory),
+                datasets: [
+                    {
+                        backgroundColor: [
+                            '#0d6efd', '#198754', '#ffc107', '#dc3545', 
+                            '#6610f2', '#fd7e14', '#adb5bd'
+                        ],
+                        data: Object.values(filteredExpensesByCategory)
+                    }
+                ]
+            };
+        },
+        pieChartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${this.formatCurrency(value)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            };
+        },
+        monthlyData() {
+            const months = {};
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            for (let i = 0; i < 12; i++) {
+                const monthName = new Date(currentYear, i, 1).toLocaleString('en-US', { month: 'short' });
+                months[monthName] = 0;
+            }
+            this.filteredExpenses.forEach(expense => {
+                const expenseDate = new Date(expense.date);
+                if (expenseDate.getFullYear() === currentYear) {
+                    const monthName = expenseDate.toLocaleString('en-US', { month: 'short' });
+                    months[monthName] += parseFloat(expense.amount);
+                }
+            });
+            return months;
+        },
+        barChartData() {
+            const filteredMonthlyData = {};
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            for (let i = 0; i < 12; i++) {
+                const monthName = new Date(currentYear, i, 1).toLocaleString('en-US', { month: 'short' });
+                filteredMonthlyData[monthName] = 0;
+            }
+            this.filteredExpenses.forEach(expense => {
+                const expenseDate = new Date(expense.date);
+                if (expenseDate.getFullYear() === currentYear) {
+                    const monthName = expenseDate.toLocaleString('en-US', { month: 'short' });
+                    filteredMonthlyData[monthName] += parseFloat(expense.amount);
+                }
+            });
+            return {
+                labels: Object.keys(filteredMonthlyData),
+                datasets: [
+                    {
+                        label: 'Monthly Expenses',
+                        backgroundColor: '#0d6efd',
+                        data: Object.values(filteredMonthlyData)
+                    }
+                ]
+            };
+        },
+        barChartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Monthly Expenses This Year'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => this.formatCurrency(context.raw)
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => this.formatCurrency(value)
+                        }
+                    }
+                }
+            };
         }
     },
     mounted() {
         // Using Options API lifecycle hook
         this.fetchExpenses();
+        this.fetchCategories();
     },
     methods: {
         async fetchExpenses() {
             try {
                 this.loading = true;
                 const response = await apiService.getExpenseList();
-                console.log('API Response:', response); // Debug log
                 if (response?.data && Array.isArray(response.data)) {
                     this.expenses = response.data;
-                    console.log('Expenses set:', this.expenses); // Debug log
                 } else {
                     this.expenses = [];
                     this.error = "Invalid response format from server.";
@@ -52,9 +202,17 @@ export default {
                 console.error("Error fetching expenses:", error);
             } finally {
                 this.loading = false;
+                this.isLoading = false;
             }
         },
-
+        async fetchCategories() {
+            try {
+                const categoriesResponse = await apiService.getCategoryList();
+                this.categories = categoriesResponse.data.map(cat => cat.name);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        },
         formatCurrency(amount) {
             return new Intl.NumberFormat("en-US", {
                 style: "currency",
@@ -79,98 +237,16 @@ export default {
             </header>
             <main>
                 <div class="container">
-                    <!-- Summary Cards -->
-                    <div class="mb-4">
-                        <div class="row g-4">
-                            <!-- Total Expenses Card -->
-                            <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="row mb-4">
+                        <div class="col-12 col-lg-6">
+                            <UserProfile />
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="d-flex flex-column gap-4 h-100">
+                                <!-- Quick Add Expense Card -->
                                 <div class="card h-100">
                                     <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <div class="icon-container bg-primary rounded p-3 me-3">
-                                                <svg
-                                                    class="icon text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-muted mb-1">
-                                                    Total Expenses
-                                                </h6>
-                                                <div class="fs-5 fw-semibold">
-                                                    {{ formatCurrency(totalExpenses) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-footer bg-light">
-                                        <router-link
-                                            to="/reports"
-                                            class="link-primary text-decoration-none"
-                                        >
-                                            View reports<span class="visually-hidden"> on expenses</span>
-                                        </router-link>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pending Friend Requests Card -->
-                            <div class="col-12 col-sm-6 col-lg-4">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <div class="icon-container bg-primary rounded p-3 me-3">
-                                                <svg
-                                                    class="icon text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-muted mb-1">
-                                                    Pending Friend Requests
-                                                </h6>
-                                                <div class="fs-5 fw-semibold">
-                                                    {{ pendingFriendRequests.length }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-footer bg-light">
-                                        <router-link
-                                            to="/friends"
-                                            class="link-primary text-decoration-none"
-                                        >
-                                            View all<span class="visually-hidden">friend requests</span>
-                                        </router-link>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Quick Add Expense Card -->
-                            <div class="col-12 col-sm-6 col-lg-4">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Quick Add</h5>
+                                        <h5 class="card-title">Quick Add Expense</h5>
                                         <p class="card-text text-muted">Add a new expense quickly.</p>
                                         <router-link
                                             to="/expenses/create"
@@ -194,83 +270,167 @@ export default {
                                         </router-link>
                                     </div>
                                 </div>
+                                <!-- Quick Add Budget Card -->
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Quick Add Budget</h5>
+                                        <p class="card-text text-muted">Set a new budget quickly.</p>
+                                        <router-link
+                                            to="/budgets/create"
+                                            class="btn btn-primary d-inline-flex align-items-center"
+                                        >
+                                            <svg
+                                                class="me-2 icon"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                                />
+                                            </svg>
+                                            Add Budget
+                                        </router-link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Expenses -->
-                    <div class="mb-4">
-                        <h2 class="h4 mb-3">Recent Expenses</h2>
-                        <div class="card">
-                            <ul class="list-group list-group-flush">
-                                <li
-                                    v-for="expense in recentExpenses"
-                                    :key="expense.id"
-                                    class="list-group-item"
-                                >
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="text-primary fw-medium text-truncate">
-                                            {{ expense.description }}
-                                        </div>
-                                        <div>
-                                            <span class="badge bg-success rounded-pill">
-                                                {{ expense.category.name }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between mt-2">
-                                        <div class="d-flex align-items-center text-muted">
-                                            <svg
-                                                class="icon me-2"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                                />
-                                            </svg>
-                                            {{ new Date(expense.date).toLocaleDateString() }}
-                                        </div>
-                                        <div class="d-flex align-items-center text-muted">
-                                            <svg
-                                                class="icon me-2"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                />
-                                            </svg>
-                                            {{ formatCurrency(expense.amount) }}
-                                        </div>
-                                    </div>
-                                </li>
-                                <li
-                                    v-if="!loading && recentExpenses.length === 0"
-                                    class="list-group-item text-center text-muted"
-                                >
-                                    No expenses found. Add your first expense!
-                                </li>
-                            </ul>
+                    <!-- Section Reports fusionnée -->
+                    <!-- Time Period Selector -->
+                    <div class="card mb-4">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <h3 class="h5 mb-0">Expense Analysis</h3>
+                          <select
+                            v-model="selectedPeriod"
+                            class="form-select w-auto"
+                          >
+                            <option value="week">Last 7 days</option>
+                            <option value="month">Last 30 days</option>
+                            <option value="year">Last 12 months</option>
+                            <option value="all">All time</option>
+                          </select>
                         </div>
-                        <div class="d-flex justify-content-end mt-3">
-                            <router-link
-                                to="/expenses"
-                                class="link-primary text-decoration-none"
-                            >
-                                View all expenses →
-                            </router-link>
+                      </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div v-if="isLoading" class="text-center py-5">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+
+                    <div v-else>
+                      <!-- Summary Cards -->
+                      <div class="row g-4 mb-4">
+                        <div class="col-12 col-md-4">
+                          <div class="card">
+                            <div class="card-body">
+                              <h6 class="text-muted mb-1">Total Expenses</h6>
+                              <div class="fs-4 fw-bold">{{ formatCurrency(totalAmount) }}</div>
+                            </div>
+                          </div>
                         </div>
+                        <div class="col-12 col-md-4">
+                          <div class="card">
+                            <div class="card-body">
+                              <h6 class="text-muted mb-1">Number of Transactions</h6>
+                              <div class="fs-4 fw-bold">{{ filteredExpenses.length }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                          <div class="card">
+                            <div class="card-body">
+                              <h6 class="text-muted mb-1">Average per Expense</h6>
+                              <div class="fs-4 fw-bold">
+                                {{ filteredExpenses.length ? formatCurrency(totalAmount / filteredExpenses.length) : '$0.00' }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Charts -->
+                      <div class="row g-4 mb-4">
+                        <!-- Pie Chart -->
+                        <div class="col-12 col-lg-6">
+                          <div class="card">
+                            <div class="card-body">
+                              <h3 class="h5 mb-4">Expenses by Category</h3>
+                              <div style="height: 300px;">
+                                <Pie 
+                                  v-if="Object.values(expensesByCategory).some(val => val > 0)"
+                                  :data="pieChartData" 
+                                  :options="pieChartOptions" 
+                                />
+                                <div v-else class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                  No data available for the selected period
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Bar Chart -->
+                        <div class="col-12 col-lg-6">
+                          <div class="card">
+                            <div class="card-body">
+                              <h3 class="h5 mb-4">Monthly Expenses</h3>
+                              <div style="height: 300px;">
+                                <Bar 
+                                  v-if="Object.values(monthlyData).some(val => val > 0)"
+                                  :data="barChartData" 
+                                  :options="barChartOptions" 
+                                />
+                                <div v-else class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                  No data available for this year
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Expense List -->
+                      <div class="card">
+                        <div class="card-header">
+                          <h3 class="h5 mb-0">Expense Details</h3>
+                        </div>
+                        <div class="table-responsive">
+                          <table class="table table-hover mb-0">
+                            <thead>
+                              <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="expense in filteredExpenses" :key="expense.id">
+                                <td>{{ new Date(expense.date).toLocaleDateString('en-US') }}</td>
+                                <td>{{ expense.description }}</td>
+                                <td>
+                                  <span class="badge bg-success">{{ expense.category.name }}</span>
+                                </td>
+                                <td>{{ formatCurrency(expense.amount) }}</td>
+                              </tr>
+                              <tr v-if="filteredExpenses.length === 0">
+                                <td colspan="4" class="text-center text-muted">
+                                  No expenses found for the selected period
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
                 </div>
             </main>

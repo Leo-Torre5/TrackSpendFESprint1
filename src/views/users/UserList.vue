@@ -228,16 +228,11 @@
     margin-bottom: 0.5rem;
   }
   
-  .actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
   
   .icon-button {
     background: none;
     border: none;
-    color: #42b983;
+    color: #6b8068;
     cursor: pointer;
     padding: 0.5rem;
   }
@@ -281,7 +276,7 @@
   }
   
   .auth-button {
-    background-color: #42b983;
+    background-color: #6b8068;
     color: white;
     padding: 0.8rem 1.5rem;
     border: none;

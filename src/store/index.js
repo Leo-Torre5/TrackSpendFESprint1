@@ -38,7 +38,7 @@ export default createStore({
                 commit('SET_AUTHENTICATED', false);
                 localStorage.clear();
             } catch (error) {
-                commit('SET_ERROR', 'Erreur lors de la déconnexion');
+                commit('SET_ERROR', 'Error during logout');
             }
         }
     },

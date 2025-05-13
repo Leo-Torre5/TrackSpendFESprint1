@@ -155,7 +155,6 @@
       end_date: data.end_date ? data.end_date.split('T')[0] : null
     };
     
-    console.log('Loaded budget:', this.budget); // Debug log
   } catch (error) {
     console.error('Error fetching budget:', error);
     this.error = error.response?.data?.message || error.message;
@@ -184,7 +183,6 @@
             end_date: this.budget.end_date || null
           };
   
-          console.log('Sending update:', budgetData);  // Debug log
           
           await APIService.updateAdminBudget(this.id, budgetData);
           this.$router.push({

@@ -97,7 +97,7 @@ export default {
       localStorage.setItem('access_token', tokenResponse.data.access)
       localStorage.setItem('refresh_token', tokenResponse.data.refresh)
 
-      const userResponse = await axios.get(`${API_URL}/api/getUser/`, {
+      const userResponse = await axios.get(`${API_URL}/api/profile/`, {
         headers: {
           Authorization: `Bearer ${tokenResponse.data.access}`
         }

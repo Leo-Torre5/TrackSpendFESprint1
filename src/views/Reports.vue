@@ -128,7 +128,6 @@ export default {
       }
       
       this.filteredExpenses.forEach(expense => {
-        console.log(expense.date)
         const expenseDate = new Date(expense.date);
         if (expenseDate.getFullYear() === currentYear) {
           const monthName = expenseDate.toLocaleString('en-US', { month: 'short' });

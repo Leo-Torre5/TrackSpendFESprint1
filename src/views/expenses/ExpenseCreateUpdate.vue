@@ -79,21 +79,18 @@
                     <div class="action-buttons">
                         <button
                             type="submit"
-                            class="auth-button"
+                            class="btn btn-primary"
                             :disabled="loading"
                         >
                             {{ loading ? "Processing..." : "Save Expense" }}
                         </button>
                         <button
                             type="button"
-                            class="auth-button secondary"
+                            class="btn btn-secondary"
                             @click="cancel"
                         >
                             Cancel
                         </button>
-                        <router-link to="/expenses" class="sign-in-button">
-                            Back to Expenses
-                        </router-link>
                     </div>
                 </form>
             </div>
@@ -103,6 +100,7 @@
 
 <script>
 import { APIService } from "@/http/APIService";
+import Swal from 'sweetalert2';
 const apiService = new APIService();
 
 export default {
@@ -133,7 +131,6 @@ export default {
     async mounted() {
         await this.fetchCategories();
         if (this.$route.params.id && this.$route.params.id !== "create") {
-            console.log(this.$route.params.id);
             this.isUpdate = true;
             this.pageTitle = "Edit Expense";
             await this.fetchExpense();
@@ -178,13 +175,11 @@ export default {
         async handleSubmit() {
             this.loading = true;
             this.showMsg = "";
-
             try {
                 const expenseData = {
                     ...this.expense,
                     amount: parseFloat(this.expense.amount),
                 };
-
                 if (this.isUpdate) {
                     await apiService.updateExpense(
                         this.$route.params.id,
@@ -193,9 +188,20 @@ export default {
                 } else {
                     await apiService.createExpense(expenseData);
                 }
-
+                await Swal.fire({
+                  title: 'Success!',
+                  text: 'Expense saved successfully.',
+                  icon: 'success',
+                  confirmButtonColor: '#6b8068'
+                });
                 this.$router.push("/expenses");
             } catch (error) {
+                await Swal.fire({
+                  title: 'Error',
+                  text: (error && error.response && error.response.data && error.response.data.detail) ? error.response.data.detail : (error && error.message ? error.message : 'Failed to save expense.'),
+                  icon: 'error',
+                  confirmButtonColor: '#6b8068'
+                });
                 this.handleError(error);
             } finally {
                 this.loading = false;
@@ -266,6 +272,7 @@ textarea.form-input {
 
 .action-buttons {
     display: flex;
+    flex-direction: row-reverse;
     gap: 1rem;
     margin-top: 2rem;
 }

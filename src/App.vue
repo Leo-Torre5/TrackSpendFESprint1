@@ -39,7 +39,7 @@ export default {
         const logout = () => {
             localStorage.clear();
             store.commit("SET_AUTHENTICATED", false);
-            router.push("/login");
+            router.push("/");
         };
 
         return {

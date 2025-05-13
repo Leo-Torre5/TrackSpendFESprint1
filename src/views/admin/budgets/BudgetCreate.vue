@@ -134,7 +134,6 @@ export default {
         // Set default selections if needed
         if (this.users.length > 0 && !this.budget.user_id) {
           this.budget.user_id = this.users[0].id;
-          console.log("user_id", this.budget.user_id);
         }
         if (this.categories.length > 0 && !this.budget.category_id) {
           this.budget.category_id = this.categories[0].id;
@@ -157,7 +156,6 @@ export default {
           end_date: this.budget.end_date || null
         };
 
-        console.log('Sending:', budgetData);
         
         await APIService.createAdminBudget(budgetData);
         this.$router.push({

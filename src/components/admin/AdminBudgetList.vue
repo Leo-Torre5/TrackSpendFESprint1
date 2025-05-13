@@ -83,7 +83,6 @@ export default {
     async fetchBudgets() {
       try {
         const response = await APIService.getAdminBudgetList();
-        console.log('Budget data:', response.data);
         this.budgets = response.data.map(budget => ({
           ...budget,
           amount: parseFloat(budget.amount) || 0

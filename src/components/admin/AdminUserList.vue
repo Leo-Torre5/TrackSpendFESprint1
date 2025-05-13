@@ -110,13 +110,13 @@ async created() {
     },
     async confirmDelete(userId) {
       const user = this.users.find(u => u.id === userId);
-      const isConfirmed = await confirmDialog(
+      const result = await confirmDialog(
         `Delete User ${user.username}?`,
         'This action cannot be undone',
         'warning'
       );
       
-      if (isConfirmed) {
+      if (result.isConfirmed) {
         try {
           await APIService.deleteAdminUser(userId);
           this.users = this.users.filter(u => u.id !== userId);

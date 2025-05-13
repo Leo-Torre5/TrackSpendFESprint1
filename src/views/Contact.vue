@@ -3,8 +3,8 @@
     <!-- Hero Section -->
     <section class="contact-hero" style="background-color: #6b8068; margin-top: 0;">
       <div class="container py-4 text-center text-white"> 
-        <h1 class="display-4 fw-bold mb-3">Get In Touch</h1>
-        <p class="lead mb-0">We'd love to hear from you</p>
+        <h1 class="display-4 fw-bold mb-3">Contact Us</h1>
+        <p class="lead mb-0">We would love to hear from you</p>
       </div>
     </section>
 
@@ -103,6 +103,9 @@
 </template>
 
 <script>
+import APIService from '@/http/APIService';
+import Swal from 'sweetalert2';
+
 export default {
   name: 'ContactPage',
   data() {
@@ -115,10 +118,34 @@ export default {
     }
   },
   methods: {
-    submitForm() {
-      // Add form submission logic here
-      alert('Thank you for your message! We\'ll get back to you soon.');
-      this.form = { name: '', email: '', message: '' };
+    async submitForm() {
+      try {
+        const emailData = {
+          name: this.form.name,
+          email: this.form.email,
+          message: this.form.message
+        };
+
+        await APIService.sendEmail(emailData);
+        
+        await Swal.fire({
+          title: 'Message sent!',
+          text: 'Thank you for your message. We will get back to you as soon as possible.',
+          icon: 'success',
+          confirmButtonColor: '#6b8068',
+        });
+
+        this.form = { name: '', email: '', message: '' };
+      } catch (error) {
+        console.error('Error sending email:', error);
+        
+        await Swal.fire({
+          title: 'Error',
+          text: 'An error occurred while sending the message. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#6b8068',
+        });
+      }
     }
   }
 }
@@ -129,14 +156,17 @@ export default {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
+
 .contact-hero > .container {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+
 .contact-page {
   margin: 0;
   padding: 0;
 }
+
 .feature-icon-sm {
   width: 50px;
   height: 50px;
@@ -177,7 +207,7 @@ export default {
   .card-body {
     padding: 2rem !important;
   }
-  
+
   .feature-icon-sm {
     width: 40px;
     height: 40px;

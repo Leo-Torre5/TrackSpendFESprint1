@@ -94,14 +94,14 @@
                     <div class="action-buttons">
                         <button
                             type="submit"
-                            class="auth-button"
+                            class="btn btn-primary"
                             :disabled="loading"
                         >
                             {{ loading ? "Saving..." : "Save Budget" }}
                         </button>
                         <button
                             type="button"
-                            class="auth-button secondary"
+                            class="btn btn-secondary"
                             @click="cancel"
                             :disabled="loading"
                         >
@@ -116,6 +116,7 @@
 
 <script>
 import { APIService } from "@/http/APIService";
+import Swal from 'sweetalert2';
 const apiService = new APIService();
 
 export default {
@@ -184,17 +185,14 @@ export default {
         async handleSubmit() {
             this.loading = true;
             this.showMsg = "";
-
             try {
                 // Get the current user ID from your auth system
                 const userId =
                     this.$store.state.user?.id ||
                     JSON.parse(localStorage.getItem("user"))?.id;
-
                 if (!userId) {
                     throw new Error("User not authenticated");
                 }
-
                 const budgetData = {
                     user_id: userId,
                     category_id: this.budget.category_id,
@@ -203,9 +201,6 @@ export default {
                     start_date: this.budget.start_date,
                     end_date: this.budget.end_date || null,
                 };
-
-                console.log("budgetData", budgetData);
-
                 if (this.isUpdate) {
                     await apiService.updateBudget(
                         this.$route.params.id,
@@ -214,9 +209,20 @@ export default {
                 } else {
                     await apiService.createBudget(budgetData);
                 }
-
+                await Swal.fire({
+                  title: 'Success!',
+                  text: 'Budget saved successfully.',
+                  icon: 'success',
+                  confirmButtonColor: '#6b8068'
+                });
                 this.$router.push("/budgets");
             } catch (error) {
+                await Swal.fire({
+                  title: 'Error',
+                  text: (error && error.response && error.response.data && error.response.data.detail) ? error.response.data.detail : (error && error.message ? error.message : 'Failed to save budget.'),
+                  icon: 'error',
+                  confirmButtonColor: '#6b8068'
+                });
                 this.handleError(error);
             } finally {
                 this.loading = false;
@@ -294,6 +300,7 @@ export default {
 
 .action-buttons {
     display: flex;
+    flex-direction: row-reverse;
     gap: 1rem;
     margin-top: 2rem;
 }
