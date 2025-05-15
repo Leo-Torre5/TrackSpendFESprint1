@@ -195,7 +195,7 @@ export default {
         profile: {
           phone_number: '',
           street_address: '',
-          city: '', // Added city here
+          city: '',
           zip_code: '',
           state: ''
         },
@@ -213,14 +213,25 @@ export default {
       this.loading = true;
       try {
         const response = await APIService.getAdminUser(this.id);
+        const userData = response.data;
+
         this.user = {
-          ...response.data,
-          password: '' // Don't pre-fill password
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          password: '', // Don't pre-fill password
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          user_type: userData.user_type,
+          is_active: userData.is_active,
+          profile: userData.profile || {  // Ensure profile is always an object
+            phone_number: '',
+            street_address: '',
+            city: '',
+            zip_code: '',
+            state: ''
+          }
         };
-        // Ensure profile is always an object.
-        if (!this.user.profile) {
-          this.user.profile = {};
-        }
       } catch (error) {
         console.error('Error fetching user:', error);
         this.error = error.response?.data?.message || 'Failed to load user data';
@@ -248,16 +259,26 @@ export default {
           last_name: this.user.last_name,
           user_type: this.user.user_type,
           is_active: this.user.is_active,
-          profile: {
-            phone_number: this.user.profile.phone_number,
-            street_address: this.user.profile.street_address,
-            city: this.user.profile.city, // Include city in the payload
-            zip_code: this.user.profile.zip_code,
-            state: this.user.profile.state
-          },
         };
 
-        // Only include password if provided
+        // Only include profile if it has any data
+        if (
+          this.user.profile.phone_number ||
+          this.user.profile.street_address ||
+          this.user.profile.city ||
+          this.user.profile.zip_code ||
+          this.user.profile.state
+        ) {
+          userData.profile = {
+            phone_number: this.user.profile.phone_number,
+            street_address: this.user.profile.street_address,
+            city: this.user.profile.city,
+            zip_code: this.user.profile.zip_code,
+            state: this.user.profile.state
+          };
+        }
+
+        // Only include password if it has been modified
         if (this.user.password) {
           userData.password = this.user.password;
         }
@@ -289,6 +310,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .page-container {

@@ -41,7 +41,11 @@
           v-if="!loading && expenses && expenses.length > 0"
           class="expense-cards-container"
         >
-          <div class="expense-card" v-for="expense in expenses" :key="expense.id">
+          <div
+            class="expense-card"
+            v-for="expense in expenses"
+            :key="expense.id"
+          >
             <div class="expense-card-header">
               <h3 class="expense-description">{{ expense.description }}</h3>
               <p class="expense-amount">{{ formatCurrency(expense.amount) }}</p>
@@ -123,7 +127,7 @@ export default {
       currentPage: 1,
       totalPages: 1,
       itemsPerPage: 8,
-      bannerImage: require("@/assets/images/ExpensesBanner.jpg"), // Corrected path
+      bannerImage: require("@/assets/images/ExpensesBanner.jpg"), 
     };
   },
   async created() {
@@ -183,7 +187,7 @@ export default {
         confirmButtonColor: "#d33",
         cancelButtonColor: "#6b8068",
         confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel", // Added cancel button text
+        cancelButtonText: "No, cancel",
       });
       if (result.isConfirmed) {
         try {
@@ -193,7 +197,7 @@ export default {
             title: "Deleted!",
             text: "Expense has been deleted.",
             icon: "success",
-            confirmButtonColor: "#6b8068", // Consistent button color
+            confirmButtonColor: "#6b8068",
           });
         } catch (error) {
           this.error = "Failed to delete expense. Please try again.";
@@ -202,7 +206,7 @@ export default {
             title: "Error",
             text: "Failed to delete expense. Please try again.",
             icon: "error",
-            confirmButtonColor: "#6b8068", // Consistent button color
+            confirmButtonColor: "#6b8068", 
           });
         }
       }
@@ -354,8 +358,8 @@ export default {
   margin-bottom: 0;
   padding: 1.5rem;
   width: 100%;
-  max-width: 23%;
-  flex: 1 0 auto;
+  flex-grow: 1;
+  flex-basis: calc(33.33% - 1.5rem); 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -548,7 +552,8 @@ export default {
 
 @media (max-width: 1200px) {
   .expense-card {
-    max-width: 31%;
+    flex-basis: calc(50% - 1.5rem);
+    max-width: 48%;
   }
 
   .page-description {
@@ -562,7 +567,8 @@ export default {
 
 @media (max-width: 992px) {
   .expense-card {
-    max-width: 48%;
+    flex-basis: calc(100% - 1.5rem);
+    max-width: 100%;
   }
 
   .action-bar {
@@ -589,7 +595,7 @@ export default {
 
 @media (max-width: 768px) {
   .expense-card {
-    max-width: 100%;
+    flex-basis: 100%;
   }
 
   .expense-card-header {
