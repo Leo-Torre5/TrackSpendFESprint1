@@ -95,7 +95,7 @@ export default {
 
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark custom-navbar px-3">
-    <router-link to="/home" class="navbar-brand d-flex align-items-center">
+    <router-link to="/" class="navbar-brand d-flex align-items-center">
       <img
         src="@/assets/images/TrackSpendMainLogo.png"
         alt="TrackSpend Logo"
@@ -117,9 +117,9 @@ export default {
       <ul class="navbar-nav align-items-lg-center me-auto">
         <li class="nav-item">
           <router-link
-            to="/Home"
+            to="/"
             class="nav-link"
-            :class="{ active: $route.path === '/Home' }"
+            :class="{ active: $route.path === '/' }"
           >
             Home
           </router-link>
