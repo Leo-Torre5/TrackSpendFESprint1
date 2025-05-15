@@ -3,7 +3,7 @@
       <div class="container">
         <div class="footer-content">
           <div class="footer-left">
-            <router-link to="/home" class="footer-brand">
+            <router-link to="/" class="footer-brand">
               <img
                 src="@/assets/images/TrackSpendMainLogo2.png"
                 alt="TrackSpend Logo"
