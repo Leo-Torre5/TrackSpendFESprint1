@@ -110,7 +110,7 @@ export default {
       this.SET_AUTHENTICATED(true)
       this.SET_USER(userResponse.data) // This now works
 
-      await router.push({ name: 'Home' })
+      await router.push({ name: "Dashboard" });
     } catch (error) {
         this.handleError(error);
       } finally {

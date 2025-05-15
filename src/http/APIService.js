@@ -4,6 +4,8 @@ axios.defaults.withCredentials = true;
 
 // Verify environment variable is set
 const API_URL = process.env.VUE_APP_API_URL || "http://localhost:8000";
+console.log(API_URL);
+//const API_URL="http://localhost:8000";
 
 export class APIService {
   constructor() {

@@ -1,101 +1,100 @@
 <template>
-    <div class="expense-form">
-        <main class="main-content">
-            <div class="auth-card">
-                <h2 class="auth-title">{{ pageTitle }}</h2>
+  <div class="page-container">
+    <form @submit.prevent="handleSubmit" class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">{{ pageTitle }}</h2>
+        <p class="form-description">
+          Fill out the form below to create a new expense. All fields marked with an asterisk (<span class="required-star">*</span>) are required.
+        </p>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="description" class="form-label">Description <span class="required-star">*</span></label>
+          <input
+            v-model="expense.description"
+            type="text"
+            id="description"
+            required
+            class="input-field"
+            placeholder="Enter description"
+          />
+        </div>
 
-                <div v-if="showMsg === 'error'" class="auth-alert error">
-                    {{ errorMessage }}
-                </div>
+        <div class="form-group">
+          <label for="amount" class="form-label">Amount <span class="required-star">*</span></label>
+          <input
+            v-model="expense.amount"
+            type="number"
+            id="amount"
+            step="0.01"
+            required
+            class="input-field"
+            placeholder="0.00"
+          />
+        </div>
 
-                <form
-                    @submit.prevent="handleSubmit"
-                    class="expense-form-content"
-                >
-                    <div class="form-group">
-                        <label>Description</label>
-                        <input
-                            v-model="expense.description"
-                            type="text"
-                            required
-                            class="form-input"
-                            placeholder="Enter description"
-                        />
-                    </div>
+        <div class="form-group">
+          <label for="date" class="form-label">Date <span class="required-star">*</span></label>
+          <input
+            v-model="expense.date"
+            type="date"
+            id="date"
+            required
+            class="input-field"
+          />
+        </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Amount ($)</label>
-                            <input
-                                v-model="expense.amount"
-                                type="number"
-                                step="0.01"
-                                required
-                                class="form-input"
-                                placeholder="0.00"
-                            />
-                        </div>
+        <div class="form-group">
+          <label for="category" class="form-label">Category <span class="required-star">*</span></label>
+          <select
+            v-model="expense.category_id"
+            id="category"
+            class="select-field"
+            required
+            :disabled="loading"
+          >
+            <option value="">Select Category</option>
+            <option
+              v-for="category in categories"
+              :key="category.id"
+              :value="category.id"
+            >
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
 
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input
-                                v-model="expense.date"
-                                type="date"
-                                required
-                                class="form-input"
-                            />
-                        </div>
-                    </div>
+        <div class="form-group">
+          <label for="notes" class="form-label">Notes</label>
+          <textarea
+            v-model="expense.notes"
+            id="notes"
+            class="input-field"
+            placeholder="Additional notes..."
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
 
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select
-                            v-model="expense.category_id"
-                            class="form-input"
-                            required
-                            :disabled="loading"
-                        >
-                            <option value="">Select Category</option>
-                            <option
-                                v-for="category in categories"
-                                :key="category.id"
-                                :value="category.id"
-                            >
-                                {{ category.name }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Notes</label>
-                        <textarea
-                            v-model="expense.notes"
-                            class="form-input"
-                            placeholder="Additional notes..."
-                            rows="3"
-                        ></textarea>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                            :disabled="loading"
-                        >
-                            {{ loading ? "Processing..." : "Save Expense" }}
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            @click="cancel"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </main>
+      <div class="button-container">
+        <button
+          type="submit"
+          class="btn btn-primary create-button"
+          :disabled="loading"
+        >
+          {{ "Save Expense" }}
+        </button>
+      </div>
+      <div v-if="showMsg === 'error'" class="alert alert-danger mt-3">
+        {{ errorMessage }}
+      </div>
+    </form>
+    <div class="bottom-button-container">
+      <a href="#" class="btn btn-secondary back-button bottom-back-button" @click.prevent="$router.go(-1)">
+        <i class="bi bi-arrow-left"></i> Back to Expenses
+      </a>
     </div>
+  </div>
 </template>
 
 <script>
@@ -104,253 +103,408 @@ import Swal from 'sweetalert2';
 const apiService = new APIService();
 
 export default {
-    name: "ExpenseCreateUpdate",
-    data() {
-        return {
-            expense: {
-                description: "",
-                amount: 0,
-                date: new Date().toISOString().split("T")[0],
-                category_id: "",
-                notes: "",
-            },
-            categories: [],
-            pageTitle: "New Expense",
-            showMsg: "",
-            errorMessage: "",
-            loading: false,
-            isUpdate: false,
+  name: "ExpenseCreateUpdate",
+  data() {
+    return {
+      expense: {
+        description: "",
+        amount: 0,
+        date: new Date().toISOString().split("T")[0],
+        category_id: "",
+        notes: "",
+      },
+      categories: [],
+      pageTitle: "New Expense",
+      showMsg: "",
+      errorMessage: "",
+      loading: false, 
+      isUpdate: false,
+    };
+  },
+  beforeCreate() {
+    const isAuthenticated = localStorage.getItem("access_token");
+    if (!isAuthenticated) {
+      this.$router.push("/login");
+    }
+  },
+  async mounted() {
+    await this.fetchCategories();
+    if (this.$route.params.id && this.$route.params.id !== "create") {
+      this.isUpdate = true;
+      this.pageTitle = "Edit Expense";
+      await this.fetchExpense();
+    }
+  },
+  methods: {
+    async fetchCategories() {
+      try {
+        const response = await apiService.getCategoryList();
+        this.categories = response.data;
+      } catch (error) {
+        this.handleError(error);
+      }
+    },
+    async fetchExpense() {
+      try {
+        this.loading = true;  
+        const response = await apiService.getExpense(
+          this.$route.params.id
+        );
+        this.expense = {
+          ...response.data,
+          date: response.data.date.split("T")[0],
+          category_id: response.data.category.id,
+          notes: response.data.notes,
         };
+      } catch (error) {
+        this.handleError(error);
+      } finally {
+        this.loading = false; 
+      }
     },
-    beforeCreate() {
-        const isAuthenticated = localStorage.getItem("access_token");
-        if (!isAuthenticated) {
+    async fetchExpenseList() {
+      try {
+        const response = await apiService.getExpenseList(
+          this.$route.params.id
+        );
+        this.expense = {
+          ...response.data,
+          date: response.data.date.split("T")[0],
+        };
+      } catch (error) {
+        this.handleError(error);
+      }
+    },
+    async handleSubmit() {
+      this.showMsg = "";
+      try {
+        const expenseData = {
+          ...this.expense,
+          amount: parseFloat(this.expense.amount),
+        };
+        if (this.isUpdate) {
+          await apiService.updateExpense(
+            this.$route.params.id,
+            expenseData
+          );
+        } else {
+          await apiService.createExpense(expenseData);
+        }
+        await Swal.fire({
+          title: "Success!",
+          text: "Expense saved successfully.",
+          icon: "success",
+          confirmButtonColor: "#6b8068",
+        });
+        this.$router.push("/expenses");
+      } catch (error) {
+        await Swal.fire({
+          title: "Error",
+          text:
+            error &&
+            error.response &&
+            error.response.data &&
+            error.response.data.detail
+              ? error.response.data.detail
+              : error && error.message
+                ? error.message
+                : "Failed to save expense.",
+          icon: "error",
+          confirmButtonColor: "#6b8068",
+        });
+        this.handleError(error);
+      } finally {
+       //  this.loading = false;  // Removed:  no longer used
+      }
+    },
+    handleError(error) {
+      this.showMsg = "error";
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            this.errorMessage =
+              "Invalid expense data. Please check your inputs.";
+            break;
+          case 401:
+            localStorage.removeItem("access_token");
             this.$router.push("/login");
+            break;
+          default:
+            this.errorMessage = "Error saving expense. Please try again.";
         }
+      } else {
+        this.errorMessage = "Network error. Please check your connection.";
+      }
     },
-    async mounted() {
-        await this.fetchCategories();
-        if (this.$route.params.id && this.$route.params.id !== "create") {
-            this.isUpdate = true;
-            this.pageTitle = "Edit Expense";
-            await this.fetchExpense();
-        }
+    cancel() {
+      this.$router.push("/expenses");
     },
-    methods: {
-        async fetchCategories() {
-            try {
-                const response = await apiService.getCategoryList();
-                this.categories = response.data;
-            } catch (error) {
-                this.handleError(error);
-            }
-        },
-        async fetchExpense() {
-            try {
-                const response = await apiService.getExpense(
-                    this.$route.params.id
-                );
-                this.expense = {
-                    ...response.data,
-                    date: response.data.date.split("T")[0],
-                    category_id: response.data.category.id,
-                };
-            } catch (error) {
-                this.handleError(error);
-            }
-        },
-        async fetchExpenseList() {
-            try {
-                const response = await apiService.getExpenseList(
-                    this.$route.params.id
-                );
-                this.expense = {
-                    ...response.data,
-                    date: response.data.date.split("T")[0],
-                };
-            } catch (error) {
-                this.handleError(error);
-            }
-        },
-        async handleSubmit() {
-            this.loading = true;
-            this.showMsg = "";
-            try {
-                const expenseData = {
-                    ...this.expense,
-                    amount: parseFloat(this.expense.amount),
-                };
-                if (this.isUpdate) {
-                    await apiService.updateExpense(
-                        this.$route.params.id,
-                        expenseData
-                    );
-                } else {
-                    await apiService.createExpense(expenseData);
-                }
-                await Swal.fire({
-                  title: 'Success!',
-                  text: 'Expense saved successfully.',
-                  icon: 'success',
-                  confirmButtonColor: '#6b8068'
-                });
-                this.$router.push("/expenses");
-            } catch (error) {
-                await Swal.fire({
-                  title: 'Error',
-                  text: (error && error.response && error.response.data && error.response.data.detail) ? error.response.data.detail : (error && error.message ? error.message : 'Failed to save expense.'),
-                  icon: 'error',
-                  confirmButtonColor: '#6b8068'
-                });
-                this.handleError(error);
-            } finally {
-                this.loading = false;
-            }
-        },
-        handleError(error) {
-            this.showMsg = "error";
-            if (error.response) {
-                switch (error.response.status) {
-                    case 400:
-                        this.errorMessage =
-                            "Invalid expense data. Please check your inputs.";
-                        break;
-                    case 401:
-                        localStorage.removeItem("access_token");
-                        this.$router.push("/login");
-                        break;
-                    default:
-                        this.errorMessage =
-                            "Error saving expense. Please try again.";
-                }
-            } else {
-                this.errorMessage =
-                    "Network error. Please check your connection.";
-            }
-        },
-        cancel() {
-            this.$router.push("/expenses");
-        },
-    },
+  },
 };
 </script>
 
 <style scoped>
-.expense-form-content {
-    max-width: 600px;
-    margin: 0 auto;
+.page-container {
+  padding: 25px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.page-header {
+  display: none;
+}
+
+.form-card {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #ededed;
+  margin-top: 30px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.form-description {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #495057;
+  margin-bottom: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  flex: 1;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.form-input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 1rem;
+.input-group {
+  display: flex;
+  align-items: center;
 }
 
-.form-input:focus {
-    outline: none;
-    border-color: #42b983;
+.input-group-text {
+  display: none; 
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem 0 0 0.375rem;
+  margin-right: -1px;
+  color: #2c3e50;
 }
 
-textarea.form-input {
-    resize: vertical;
-    min-height: 100px;
+
+.form-label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.required-star {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.input-field {
+  padding: 14px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  width: 100%;
+  outline: none;
+  background-color: #f8f8f8;
+  color: #2c3e50;
+}
+
+.input-field:focus {
+  border-color: #c76d32;
+  box-shadow: 0 0 5px rgba(199, 109, 50, 0.2);
+  background-color: #fff;
+}
+
+.select-field {
+  padding: 14px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  width: 100%;
+  outline: none;
+  background-color: #f8f8f8;
+  color: #2c3e50;
+}
+
+.select-field:focus {
+  border-color: #c76d32;
+  box-shadow: 0 0 5px rgba(199, 109, 50, 0.2);
+  background-color: #fff;
+}
+
+.form-text.text-muted {
+  font-size: 0.9rem;
+  color: #6c757d !important;
+  display: block;
+  margin-top: 5px;
 }
 
 .action-buttons {
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 1rem;
-    margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  width: 100%;
 }
 
-.secondary {
-    background-color: #6c757d;
+
+.create-button {
+  padding: 14px 30px;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #c76d32;
+  border: none;
+  color: white;
+  margin-top: 20px;
+  width: 100%;
 }
 
-.secondary:hover {
-    background-color: #5a6268;
+.create-button:hover {
+  background-color: #a45a23;
+  transform: translateY(-2px);
+}
+
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-text {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.error-section {
+  padding: 25px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 25px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.button-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+}
+
+.bottom-button-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bottom-back-button {
+  padding: 14px 25px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #c76d32;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 30%;
+  text-align: center;
+}
+
+.bottom-back-button:hover {
+  background-color: #a45a23;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}
+  .page-container {
+    padding: 15px;
+  }
 
-/* Reuse existing header styles */
-.header {
-    background-color: #2c3e50;
-    padding: 1rem 2rem;
-}
+  .form-card {
+    padding: 25px;
+  }
 
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 
-.logo a {
-    color: white;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-.sign-in-button {
-    background-color: #42b983;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    text-decoration: none;
-}
-
-.auth-card {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.auth-title {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.auth-alert.error {
-    background-color: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fca5a5;
-    padding: 1rem;
+  .form-group{
     margin-bottom: 1.5rem;
-    border-radius: 6px;
-}
-.sign-in-button {
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    text-decoration: none;
-    background-color: #2c463f;
-    color: white;
-}
+  }
 
-.sign-in-button:hover {
-    background-color: #6b8068;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  .button-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .bottom-back-button {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+  }
 }
 </style>

@@ -6,7 +6,7 @@
             <p>
                 The page you are looking for does not exist or has been moved.
             </p>
-            <router-link to="/" class="back-button">Back to Home</router-link>
+            <router-link to="/home" class="back-button">Back to Home</router-link>
         </div>
     </div>
 </template>
